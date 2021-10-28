@@ -1,0 +1,46 @@
+module frr-zebra-srv6 {
+  yang-version 1.1;
+  namespace "http://frrouting.org/yang/zebra-srv6";
+  prefix frr-zebra-srv6;
+  
+  import ietf-yang-types {
+    prefix yang;
+  }
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  organization
+    "FRRouting";
+  contact
+    "FRR Users List: <mailto:frog@lists.frrouting.org> FRR Development
+     List: <mailto:dev@lists.frrouting.org>";
+  description
+    "This module defines a model for zebra sev6 settings.";
+
+  revision 2021-10-28 {
+    description
+      "Initial revision";
+  }
+
+  container srv6 {
+    description
+      "Configuration of the zebra srv6 manager.";
+
+    container locators {
+      list locator {
+        key "name";
+        description
+          "List of SRv6 Locators configured on the local system,
+           managed by zebra SRv6 manager.";
+
+        leaf prefix {
+          type inet:ip-prefix;
+          description
+            "Locator prefix";
+        }
+      }
+    }
+  }
+}

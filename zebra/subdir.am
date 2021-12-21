@@ -96,6 +96,8 @@ zebra_zebra_SOURCES = \
 	zebra/zebra_mpls_vty.c \
 	zebra/zebra_srv6.c \
 	zebra/zebra_srv6_vty.c \
+	zebra/zebra_srv6_nb.c \
+	zebra/zebra_srv6_nb_config.c \
 	zebra/zebra_mroute.c \
 	zebra/zebra_nb.c \
 	zebra/zebra_nb_config.c \
@@ -230,6 +232,7 @@ endif
 nodist_zebra_zebra_SOURCES = \
 	yang/frr-zebra.yang.c \
 	yang/frr-zebra-route-map.yang.c \
+	yang/frr-zebra-srv6.yang.c \
 	# end
 
 zebra_zebra_cumulus_mlag_la_SOURCES = zebra/zebra_mlag_private.c

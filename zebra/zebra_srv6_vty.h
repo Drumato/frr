@@ -22,4 +22,25 @@
 
 extern void zebra_srv6_vty_init(void);
 
+/* Optional 'cli_show' callbacks. */
+void cli_show_segment_routing_srv6(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults);
+void cli_show_segment_routing_srv6_end(struct vty *vty, const struct lyd_node *dnode);
+void cli_show_srv6_locators(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults);
+void cli_show_srv6_locators_end(struct vty *vty, const struct lyd_node *dnode);
+void cli_show_srv6_locators_locators(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults);
+void cli_show_srv6_locators_locators_end(struct vty *vty, const struct lyd_node *dnode);
+void cli_show_srv6_locator(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults);
+void cli_show_srv6_locator_end(struct vty *vty, const struct lyd_node *dnode);
+void cli_show_srv6_locator_prefix_container(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults);
+
+void cli_show_srv6_locator_prefix_container_end(struct vty *vty, const struct lyd_node *dnode);
+void cli_show_srv6_locator_prefix(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults);
+void cli_show_srv6_locator_prefix_end(struct vty *vty, const struct lyd_node *dnode);
+
 #endif /* _ZEBRA_SRV6_VTY_H */

@@ -29,6 +29,8 @@
 #include "vrf.h"
 #include "srv6.h"
 #include "lib/json.h"
+#include "lib/command.h"
+#include "lib/northbound_cli.h"
 
 #include "zebra/zserv.h"
 #include "zebra/zebra_router.h"
@@ -43,6 +45,10 @@
 #ifndef VTYSH_EXTRACT_PL
 #include "zebra/zebra_srv6_vty_clippy.c"
 #endif
+
+#define SRV6_LOCATOR_CMD_STR \
+    "Create SRv6 Locator\n" \
+    "Specify locator name\n"
 
 static int zebra_sr_config(struct vty *vty);
 
@@ -59,7 +65,6 @@ static struct cmd_node srv6_node = {
 	.node = SRV6_NODE,
 	.parent_node = SEGMENT_ROUTING_NODE,
 	.prompt = "%s(config-srv6)# ",
-
 };
 
 static struct cmd_node srv6_locs_node = {
@@ -75,7 +80,6 @@ static struct cmd_node srv6_loc_node = {
 	.parent_node = SRV6_LOCS_NODE,
 	.prompt = "%s(config-srv6-locator)# "
 };
-
 DEFUN (show_srv6_locator,
        show_srv6_locator_cmd,
        "show segment-routing srv6 locator [json]",
@@ -225,51 +229,42 @@ DEFUN_NOSH (srv6_locators,
 	return CMD_SUCCESS;
 }
 
-DEFUN_NOSH (srv6_locator,
-            srv6_locator_cmd,
-            "locator WORD",
-            "Segment Routing SRv6 locator\n"
-            "Specify locator-name\n")
+DEFPY_YANG_NOSH(srv6_locator,
+                srv6_locator_cmd,
+                "locator LOC_NAME$name",
+                SRV6_LOCATOR_CMD_STR)
 {
-	struct srv6_locator *locator = NULL;
+	char xpath[XPATH_MAXLEN];
+	int rv;
 
-	locator = zebra_srv6_locator_lookup(argv[1]->arg);
-	if (locator) {
-		VTY_PUSH_CONTEXT(SRV6_LOC_NODE, locator);
-		locator->status_up = true;
-		return CMD_SUCCESS;
-	}
+	snprintf(xpath, sizeof(xpath),
+		 "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", name);
+	nb_cli_enqueue_change(vty, xpath, NB_OP_CREATE, NULL);
 
-	locator = srv6_locator_alloc(argv[1]->arg);
-	if (!locator) {
-		vty_out(vty, "%% Alloc failed\n");
-		return CMD_WARNING_CONFIG_FAILED;
-	}
-	locator->status_up = true;
+	rv = nb_cli_apply_changes(vty, xpath);
+	if (rv == CMD_SUCCESS)
+		VTY_PUSH_XPATH(SRV6_LOC_NODE, xpath);
 
-	VTY_PUSH_CONTEXT(SRV6_LOC_NODE, locator);
-	vty->node = SRV6_LOC_NODE;
-	return CMD_SUCCESS;
+	return rv;
 }
 
-DEFUN (no_srv6_locator,
-       no_srv6_locator_cmd,
-       "no locator WORD",
-       NO_STR
-       "Segment Routing SRv6 locator\n"
-       "Specify locator-name\n")
+DEFPY_YANG(
+	no_srv6_locator, 
+    no_srv6_locator_cmd,
+	"no locator LOC_NAME$name",
+    NO_STR
+    SRV6_LOCATOR_CMD_STR)
 {
-	struct srv6_locator *locator = zebra_srv6_locator_lookup(argv[2]->arg);
-	if (!locator) {
-		vty_out(vty, "%% Can't find SRv6 locator\n");
-		return CMD_WARNING_CONFIG_FAILED;
-	}
+	char xpath[XPATH_MAXLEN];
 
-	zebra_srv6_locator_delete(locator);
-	return CMD_SUCCESS;
+	snprintf(xpath, sizeof(xpath),
+		 "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", name);
+	nb_cli_enqueue_change(vty, xpath, NB_OP_DESTROY, NULL);
+
+	return nb_cli_apply_changes(vty, NULL);
 }
 
-DEFPY (locator_prefix,
+DEFPY_YANG (locator_prefix,
        locator_prefix_cmd,
        "prefix X:X::X:X/M$prefix [func-bits (16-64)$func_bit_len]",
        "Configure SRv6 locator prefix\n"
@@ -277,11 +272,12 @@ DEFPY (locator_prefix,
        "Configure SRv6 locator function length in bits\n"
        "Specify SRv6 locator function length in bits\n")
 {
-	VTY_DECLVAR_CONTEXT(srv6_locator, locator);
-	struct srv6_locator_chunk *chunk = NULL;
-	struct listnode *node = NULL;
-
-	locator->prefix = *prefix;
+    int rv;
+    char node_bits_length_str[8];
+    const char *loc_name = NULL;
+    struct srv6_locator*locator = NULL;
+    struct srv6_locator_chunk *chunk = NULL;
+    struct listnode *node = NULL;
 
 	/*
 	 * TODO(slankdev): please support variable node-bit-length.
@@ -298,75 +294,126 @@ DEFPY (locator_prefix,
 	 *      user should use a pattern of zeros as a filler.
 	 *  (3) The Node Id portion (LSBs) cannot exceed 24 bits.
 	 */
-	locator->block_bits_length = prefix->prefixlen - 24;
-	locator->node_bits_length = 24;
-	locator->function_bits_length = func_bit_len;
-	locator->argument_bits_length = 0;
+    nb_cli_enqueue_change(vty, "./prefix/prefix", NB_OP_MODIFY, prefix_str);
+    nb_cli_enqueue_change(vty, "./status-up", NB_OP_MODIFY, "true");
 
-	if (list_isempty(locator->chunks)) {
-		chunk = srv6_locator_chunk_alloc();
-		chunk->prefix = *prefix;
-		chunk->proto = 0;
-		listnode_add(locator->chunks, chunk);
-	} else {
-		for (ALL_LIST_ELEMENTS_RO(locator->chunks, node, chunk)) {
-			uint8_t zero[16] = {0};
+    if (func_bit_len != 0) {
+        nb_cli_enqueue_change(vty, "./function-bits-length", NB_OP_MODIFY, func_bit_len_str);
+    }
+    snprintf(node_bits_length_str, sizeof(node_bits_length_str), "%d", prefix->prefixlen - 24);
+    nb_cli_enqueue_change(vty, "./block-bits-length", NB_OP_MODIFY, node_bits_length_str);
+    nb_cli_enqueue_change(vty, "./node-bits-length", NB_OP_MODIFY, "24");
+    nb_cli_enqueue_change(vty, "./argument-bits-length", NB_OP_MODIFY, "0");
 
-			if (memcmp(&chunk->prefix.prefix, zero, 16) == 0) {
-				struct zserv *client;
-				struct listnode *client_node;
+    loc_name = yang_dnode_get_string(vty->candidate_config->dnode, "%s/name", VTY_CURR_XPATH);
+    rv = nb_cli_apply_changes(vty, NULL);
 
-				chunk->prefix = *prefix;
-				for (ALL_LIST_ELEMENTS_RO(zrouter.client_list,
-							  client_node,
-							  client)) {
-					struct srv6_locator *tmp;
+    locator = zebra_srv6_locator_lookup(loc_name);
+    if (!locator)
+        return CMD_WARNING;
 
-					if (client->proto != chunk->proto)
-						continue;
+	for (ALL_LIST_ELEMENTS_RO(locator->chunks, node, chunk)) {
+		uint8_t zero[16] = {0};
 
-					srv6_manager_get_locator_chunk_call(
-							&tmp, client,
-							locator->name,
-							VRF_DEFAULT);
-				}
+		if (memcmp(&chunk->prefix.prefix, zero, 16) == 0) {
+			struct zserv *client;
+			struct listnode *client_node;
+
+			chunk->prefix = locator->prefix;
+			for (ALL_LIST_ELEMENTS_RO(zrouter.client_list,
+							client_node,
+							client)) {
+				struct srv6_locator *tmp;
+
+				if (client->proto != chunk->proto)
+					continue;
+
+				srv6_manager_get_locator_chunk_call(
+						&tmp, client,
+						locator->name,
+						VRF_DEFAULT);
 			}
 		}
 	}
 
-	zebra_srv6_locator_add(locator);
-	return CMD_SUCCESS;
+    return rv;
+}
+
+void cli_show_segment_routing_srv6(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults) {
+	vty_out(vty, "segment-routing srv6\n");
+}
+
+void cli_show_segment_routing_srv6_end(struct vty *vty, const struct lyd_node *dnode) {
+	vty_out(vty, "exit\n");
+}
+
+void cli_show_srv6_locators(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults) {
+	vty_out(vty, " locators\n");
+}
+
+void cli_show_srv6_locators_end(struct vty *vty, const struct lyd_node *dnode) {
+	vty_out(vty, " exit\n");
+}
+
+// this function doesn't anything for consisutency to cisco's cli
+void cli_show_srv6_locators_locators(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults) {
+}
+
+// this function doesn't anything for consisutency to cisco's cli
+void cli_show_srv6_locators_locators_end(struct vty *vty, const struct lyd_node *dnode) {
+}
+
+void cli_show_srv6_locator(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults)
+{
+	const char *loc_name = NULL;
+
+	loc_name = yang_dnode_get_string(dnode, "./name");
+	vty_out(vty, "  locator %s\n", loc_name);
+}
+
+void cli_show_srv6_locator_end(struct vty *vty, const struct lyd_node *dnode)
+{
+	vty_out(vty, "  exit\n");
+}
+
+// this function doesn't anything for consisutency to cisco's cli
+void cli_show_srv6_locator_prefix_container(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults) {
+}
+
+// this function doesn't anything for consisutency to cisco's cli
+void cli_show_srv6_locator_prefix_container_end(struct vty *vty, const struct lyd_node *dnode) {
+}
+
+void cli_show_srv6_locator_prefix(struct vty *vty, const struct lyd_node *dnode,
+			bool show_defaults) {
+    const struct prefix prefix;
+    // yang_dnode_get_prefix(&prefix, dnode, "./prefix");
+	// vty_out(vty, "   prefix %s\n", );
+}
+
+void cli_show_srv6_locator_prefix_end(struct vty *vty, const struct lyd_node *dnode) {
+	vty_out(vty, "   exit\n");
 }
 
 static int zebra_sr_config(struct vty *vty)
 {
-	struct zebra_srv6 *srv6 = zebra_srv6_get_default();
-	struct listnode *node;
-	struct srv6_locator *locator;
-	char str[256];
+	int write = 0;
+	struct lyd_node *dnode;
 
-	vty_out(vty, "!\n");
 	if (zebra_srv6_is_enable()) {
-		vty_out(vty, "segment-routing\n");
-		vty_out(vty, " srv6\n");
-		vty_out(vty, "  locators\n");
-		for (ALL_LIST_ELEMENTS_RO(srv6->locators, node, locator)) {
-			inet_ntop(AF_INET6, &locator->prefix.prefix,
-				  str, sizeof(str));
-			vty_out(vty, "   locator %s\n", locator->name);
-			vty_out(vty, "    prefix %s/%u\n", str,
-				locator->prefix.prefixlen);
-			vty_out(vty, "   exit\n");
-			vty_out(vty, "   !\n");
+		dnode = yang_dnode_get(running_config->dnode, "/frr-zebra-srv6:srv6");
+		if (dnode) {
+			nb_cli_show_dnode_cmds(vty, dnode, false);
+			write++;
 		}
-		vty_out(vty, "  exit\n");
-		vty_out(vty, "  !\n");
-		vty_out(vty, " exit\n");
-		vty_out(vty, " !\n");
-		vty_out(vty, "exit\n");
-		vty_out(vty, "!\n");
 	}
-	return 0;
+
+	return write;
 }
 
 void zebra_srv6_vty_init(void)

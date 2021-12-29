@@ -309,8 +309,10 @@ DEFPY_YANG (locator_prefix,
     rv = nb_cli_apply_changes(vty, NULL);
 
     locator = zebra_srv6_locator_lookup(loc_name);
-    if (!locator)
+    if (!locator) {
+        zlog_err("locator %s is not found", loc_name);
         return CMD_WARNING;
+    }
 
 	for (ALL_LIST_ELEMENTS_RO(locator->chunks, node, chunk)) {
 		uint8_t zero[16] = {0};
@@ -391,7 +393,7 @@ void cli_show_srv6_locator_prefix_container_end(struct vty *vty, const struct ly
 
 void cli_show_srv6_locator_prefix(struct vty *vty, const struct lyd_node *dnode,
 			bool show_defaults) {
-    const struct prefix prefix;
+    // const struct prefix prefix;
     // yang_dnode_get_prefix(&prefix, dnode, "./prefix");
 	// vty_out(vty, "   prefix %s\n", );
 }

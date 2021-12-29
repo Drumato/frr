@@ -59,8 +59,7 @@ int nb_lib_srv6_locator_destroy(struct nb_cb_destroy_args *args)
 	struct srv6_locator *loc;
 	const char *loc_name;
 
-    if (args->event != NB_EV_APPLY) 
-        return NB_OK;
+    if (args->event != NB_EV_APPLY) return NB_OK;
 
 	loc_name = yang_dnode_get_string(args->dnode, "./name");
 	loc = zebra_srv6_locator_lookup(loc_name);
@@ -79,10 +78,8 @@ int nb_lib_srv6_locator_destroy(struct nb_cb_destroy_args *args)
  */
 int nb_lib_srv6_locator_prefix_modify(struct nb_cb_modify_args *args) {
 	struct srv6_locator *locator;
-	struct srv6_locator_chunk *chunk;
 
-    if (args->event != NB_EV_APPLY)
-        return NB_OK;
+    if (args->event != NB_EV_APPLY) return NB_OK;
 
     locator = nb_running_get_entry(args->dnode, NULL, true);
     yang_dnode_get_prefix(&locator->prefix, args->dnode, NULL);

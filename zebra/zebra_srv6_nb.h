@@ -22,3 +22,4 @@
 const struct frr_yang_module_info frr_zebra_srv6_info;
 
 #endif
+

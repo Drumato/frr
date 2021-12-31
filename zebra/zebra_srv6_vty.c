@@ -205,7 +205,7 @@ DEFUN_NOSH (srv6,
 	return CMD_SUCCESS;
 }
 
-DEFUN (no_srv6,
+DEFUN_YANG (no_srv6,
        no_srv6_cmd,
        "no srv6",
        NO_STR
@@ -214,10 +214,22 @@ DEFUN (no_srv6,
 	struct zebra_srv6 *srv6 = zebra_srv6_get_default();
 	struct srv6_locator *locator;
 	struct listnode *node, *nnode;
+    char xpath[XPATH_MAXLEN];
+    int rv;
+
+    /* For consistency between global srv6 manager and yang dnode */
+	for (ALL_LIST_ELEMENTS(srv6->locators, node, nnode, locator)) {
+	    snprintf(xpath, sizeof(xpath),
+		    "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", locator->name);
+	    nb_cli_enqueue_change(vty, xpath, NB_OP_DESTROY, NULL);
+    }
+
+    rv = nb_cli_apply_changes(vty, NULL);
 
 	for (ALL_LIST_ELEMENTS(srv6->locators, node, nnode, locator))
 		zebra_srv6_locator_delete(locator);
-	return CMD_SUCCESS;
+
+	return rv;
 }
 
 DEFUN_NOSH (srv6_locators,
@@ -261,7 +273,7 @@ DEFPY_YANG(
 		 "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", name);
 	nb_cli_enqueue_change(vty, xpath, NB_OP_DESTROY, NULL);
 
-	return nb_cli_apply_changes(vty, NULL);
+	return nb_cli_apply_changes(vty, xpath);
 }
 
 DEFPY_YANG (locator_prefix,
@@ -294,18 +306,21 @@ DEFPY_YANG (locator_prefix,
 	 *      user should use a pattern of zeros as a filler.
 	 *  (3) The Node Id portion (LSBs) cannot exceed 24 bits.
 	 */
+    snprintf(node_bits_length_str, sizeof(node_bits_length_str), 
+            "%d", prefix->prefixlen - 24);
+
     nb_cli_enqueue_change(vty, "./prefix/prefix", NB_OP_MODIFY, prefix_str);
     nb_cli_enqueue_change(vty, "./status-up", NB_OP_MODIFY, "true");
-
-    if (func_bit_len != 0) {
-        nb_cli_enqueue_change(vty, "./function-bits-length", NB_OP_MODIFY, func_bit_len_str);
-    }
-    snprintf(node_bits_length_str, sizeof(node_bits_length_str), "%d", prefix->prefixlen - 24);
     nb_cli_enqueue_change(vty, "./block-bits-length", NB_OP_MODIFY, node_bits_length_str);
     nb_cli_enqueue_change(vty, "./node-bits-length", NB_OP_MODIFY, "24");
     nb_cli_enqueue_change(vty, "./argument-bits-length", NB_OP_MODIFY, "0");
+    if (func_bit_len != 0) {
+        nb_cli_enqueue_change(vty, "./function-bits-length", 
+                NB_OP_MODIFY, func_bit_len_str);
+    }
 
-    loc_name = yang_dnode_get_string(vty->candidate_config->dnode, "%s/name", VTY_CURR_XPATH);
+    loc_name = yang_dnode_get_string(
+            vty->candidate_config->dnode, "%s/name", VTY_CURR_XPATH);
     rv = nb_cli_apply_changes(vty, NULL);
 
     locator = zebra_srv6_locator_lookup(loc_name);
@@ -341,12 +356,13 @@ DEFPY_YANG (locator_prefix,
     return rv;
 }
 
-void cli_show_segment_routing_srv6(struct vty *vty, const struct lyd_node *dnode,
-			bool show_defaults) {
+void cli_show_segment_routing_srv6(struct vty *vty, 
+        const struct lyd_node *dnode, bool show_defaults) {
 	vty_out(vty, "segment-routing srv6\n");
 }
 
-void cli_show_segment_routing_srv6_end(struct vty *vty, const struct lyd_node *dnode) {
+void cli_show_segment_routing_srv6_end(struct vty *vty, 
+        const struct lyd_node *dnode) {
 	vty_out(vty, "exit\n");
 }
 
@@ -355,17 +371,19 @@ void cli_show_srv6_locators(struct vty *vty, const struct lyd_node *dnode,
 	vty_out(vty, " locators\n");
 }
 
-void cli_show_srv6_locators_end(struct vty *vty, const struct lyd_node *dnode) {
+void cli_show_srv6_locators_end(struct vty *vty, 
+        const struct lyd_node *dnode) {
 	vty_out(vty, " exit\n");
 }
 
-// this function doesn't anything for consisutency to cisco's cli
-void cli_show_srv6_locators_locators(struct vty *vty, const struct lyd_node *dnode,
-			bool show_defaults) {
+// this function doesn't anything for consisutency with cisco's cli
+void cli_show_srv6_locators_locators(struct vty *vty, 
+        const struct lyd_node *dnode, bool show_defaults) {
 }
 
-// this function doesn't anything for consisutency to cisco's cli
-void cli_show_srv6_locators_locators_end(struct vty *vty, const struct lyd_node *dnode) {
+// this function doesn't anything for consisutency with cisco's cli
+void cli_show_srv6_locators_locators_end(struct vty *vty, 
+        const struct lyd_node *dnode) {
 }
 
 void cli_show_srv6_locator(struct vty *vty, const struct lyd_node *dnode,
@@ -378,27 +396,35 @@ void cli_show_srv6_locator(struct vty *vty, const struct lyd_node *dnode,
 }
 
 void cli_show_srv6_locator_end(struct vty *vty, const struct lyd_node *dnode)
-{
-	vty_out(vty, "  exit\n");
+{ vty_out(vty, "  exit\n");
 }
 
 // this function doesn't anything for consisutency to cisco's cli
-void cli_show_srv6_locator_prefix_container(struct vty *vty, const struct lyd_node *dnode,
-			bool show_defaults) {
+void cli_show_srv6_locator_prefix_container(struct vty *vty, 
+        const struct lyd_node *dnode, bool show_defaults) {
 }
 
 // this function doesn't anything for consisutency to cisco's cli
-void cli_show_srv6_locator_prefix_container_end(struct vty *vty, const struct lyd_node *dnode) {
+void cli_show_srv6_locator_prefix_container_end(struct vty *vty, 
+        const struct lyd_node *dnode) {
 }
 
-void cli_show_srv6_locator_prefix(struct vty *vty, const struct lyd_node *dnode,
-			bool show_defaults) {
-    // const struct prefix prefix;
-    // yang_dnode_get_prefix(&prefix, dnode, "./prefix");
-	// vty_out(vty, "   prefix %s\n", );
+void cli_show_srv6_locator_prefix(struct vty *vty, 
+        const struct lyd_node *dnode, bool show_defaults) {
+    struct prefix_ipv6 prefix;
+	char prefix_str[256];
+    uint8_t function_bits_length;
+
+    yang_dnode_get_prefix(&prefix, dnode, ".");
+	prefix2str(&prefix, prefix_str, sizeof(prefix_str));
+    function_bits_length = yang_dnode_get_uint8(
+            dnode, "../../function-bits-length");
+	vty_out(vty, "   prefix %s func-bits %d\n", 
+            prefix_str, function_bits_length);
 }
 
-void cli_show_srv6_locator_prefix_end(struct vty *vty, const struct lyd_node *dnode) {
+void cli_show_srv6_locator_prefix_end(struct vty *vty, 
+        const struct lyd_node *dnode) {
 	vty_out(vty, "   exit\n");
 }
 

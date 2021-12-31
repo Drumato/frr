@@ -1,5 +1,5 @@
 /*
- * Zebra SRv6 definitions
+ * Zebra SRv6 Northbound Callbacks
  * Copyright (C) 2021  Yamato Sugawara, LINE Corporation
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -22,6 +22,7 @@
 #include "lib/northbound.h"
 #include "lib/srv6.h"
 #include "libfrr.h"
+#include "zebra/label_manager.h"
 #include "zebra/zebra_srv6.h"
 #include "zebra/zebra_srv6_nb_config.h"
 
@@ -39,9 +40,10 @@ int nb_lib_srv6_locator_create(struct nb_cb_create_args *args)
 	loc_name = yang_dnode_get_string(args->dnode, "./name");
 	loc = zebra_srv6_locator_lookup(loc_name);
 	if (!loc) {
+        /* SRv6 manager pre-allocates one chunk for zclients */
 		loc = srv6_locator_alloc(loc_name);
 		chunk = srv6_locator_chunk_alloc();
-		chunk->proto = 0;
+		chunk->proto = NO_PROTO;
 		listnode_add(loc->chunks, chunk);
     }
 
@@ -64,6 +66,8 @@ int nb_lib_srv6_locator_destroy(struct nb_cb_destroy_args *args)
 	loc_name = yang_dnode_get_string(args->dnode, "./name");
 	loc = zebra_srv6_locator_lookup(loc_name);
 	if (!loc) {
+        zlog_err("srv6_locator_destroy called but given name %s is not found", 
+                loc_name);
         return NB_ERR_NOT_FOUND;
     }
 
@@ -123,7 +127,8 @@ int nb_lib_srv6_locator_status_up_destroy(struct nb_cb_destroy_args *args)
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/block-bits-length
  */
-int nb_lib_srv6_locator_block_bits_length_modify(struct nb_cb_modify_args *args) {
+int nb_lib_srv6_locator_block_bits_length_modify(
+        struct nb_cb_modify_args *args) {
 	struct srv6_locator *locator;
 
     if (args->event != NB_EV_APPLY)
@@ -138,7 +143,8 @@ int nb_lib_srv6_locator_block_bits_length_modify(struct nb_cb_modify_args *args)
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/block-bits-length
  */
-int nb_lib_srv6_locator_block_bits_length_destroy(struct nb_cb_destroy_args *args)
+int nb_lib_srv6_locator_block_bits_length_destroy(
+        struct nb_cb_destroy_args *args)
 {
     /* All the work is done in the apply_finish */
 	return NB_OK;
@@ -147,7 +153,8 @@ int nb_lib_srv6_locator_block_bits_length_destroy(struct nb_cb_destroy_args *arg
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/node-bits-length
  */
-int nb_lib_srv6_locator_node_bits_length_modify(struct nb_cb_modify_args *args) {
+int nb_lib_srv6_locator_node_bits_length_modify(
+        struct nb_cb_modify_args *args) {
 	struct srv6_locator *locator;
 
     if (args->event != NB_EV_APPLY)
@@ -162,7 +169,8 @@ int nb_lib_srv6_locator_node_bits_length_modify(struct nb_cb_modify_args *args) 
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/node-bits-length
  */
-int nb_lib_srv6_locator_node_bits_length_destroy(struct nb_cb_destroy_args *args)
+int nb_lib_srv6_locator_node_bits_length_destroy(
+        struct nb_cb_destroy_args *args)
 {
     /* All the work is done in the apply_finish */
 	return NB_OK;
@@ -171,7 +179,8 @@ int nb_lib_srv6_locator_node_bits_length_destroy(struct nb_cb_destroy_args *args
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/function-bits-length
  */
-int nb_lib_srv6_locator_function_bits_length_modify(struct nb_cb_modify_args *args) {
+int nb_lib_srv6_locator_function_bits_length_modify(
+        struct nb_cb_modify_args *args) {
 	struct srv6_locator *locator;
 
     if (args->event != NB_EV_APPLY)
@@ -186,7 +195,8 @@ int nb_lib_srv6_locator_function_bits_length_modify(struct nb_cb_modify_args *ar
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/function-bits-length
  */
-int nb_lib_srv6_locator_function_bits_length_destroy(struct nb_cb_destroy_args *args)
+int nb_lib_srv6_locator_function_bits_length_destroy(
+        struct nb_cb_destroy_args *args)
 {
     /* All the work is done in the apply_finish */
 	return NB_OK;
@@ -195,7 +205,8 @@ int nb_lib_srv6_locator_function_bits_length_destroy(struct nb_cb_destroy_args *
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/argument-bits-length
  */
-int nb_lib_srv6_locator_argument_bits_length_modify(struct nb_cb_modify_args *args) {
+int nb_lib_srv6_locator_argument_bits_length_modify(
+        struct nb_cb_modify_args *args) {
 	struct srv6_locator *locator;
 
     if (args->event != NB_EV_APPLY)
@@ -210,7 +221,8 @@ int nb_lib_srv6_locator_argument_bits_length_modify(struct nb_cb_modify_args *ar
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/argument-bits-length
  */
-int nb_lib_srv6_locator_argument_bits_length_destroy(struct nb_cb_destroy_args *args)
+int nb_lib_srv6_locator_argument_bits_length_destroy(
+        struct nb_cb_destroy_args *args)
 {
     /* All the work is done in the apply_finish */
 	return NB_OK;

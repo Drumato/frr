@@ -40,25 +40,34 @@ int nb_lib_srv6_locator_status_up_destroy(struct nb_cb_destroy_args *args);
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/block-bits-length
  */
-int nb_lib_srv6_locator_block_bits_length_modify(struct nb_cb_modify_args *args);
-int nb_lib_srv6_locator_block_bits_length_destroy(struct nb_cb_destroy_args *args);
+int nb_lib_srv6_locator_block_bits_length_modify(
+        struct nb_cb_modify_args *args);
+int nb_lib_srv6_locator_block_bits_length_destroy(
+        struct nb_cb_destroy_args *args);
 
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/node-bits-length
  */
-int nb_lib_srv6_locator_node_bits_length_modify(struct nb_cb_modify_args *args);
-int nb_lib_srv6_locator_node_bits_length_destroy(struct nb_cb_destroy_args *args);
+int nb_lib_srv6_locator_node_bits_length_modify(
+        struct nb_cb_modify_args *args);
+int nb_lib_srv6_locator_node_bits_length_destroy(
+        struct nb_cb_destroy_args *args);
 
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/function-bits-length
  */
-int nb_lib_srv6_locator_function_bits_length_modify(struct nb_cb_modify_args *args);
-int nb_lib_srv6_locator_function_bits_length_destroy(struct nb_cb_destroy_args *args);
+int nb_lib_srv6_locator_function_bits_length_modify(
+        struct nb_cb_modify_args *args);
+int nb_lib_srv6_locator_function_bits_length_destroy(
+        struct nb_cb_destroy_args *args);
 
 /*
  * XPath: /frr-zebra-srv6:srv6/locators/locators/locator/argument-bits-length
  */
-int nb_lib_srv6_locator_argument_bits_length_modify(struct nb_cb_modify_args *args);
-int nb_lib_srv6_locator_argument_bits_length_destroy(struct nb_cb_destroy_args *args);
+int nb_lib_srv6_locator_argument_bits_length_modify(
+        struct nb_cb_modify_args *args);
+int nb_lib_srv6_locator_argument_bits_length_destroy(
+        struct nb_cb_destroy_args *args);
 
 #endif
+

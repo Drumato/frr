@@ -172,6 +172,8 @@ noinst_HEADERS += \
 	zebra/zebra_mpls.h \
 	zebra/zebra_srv6.h \
 	zebra/zebra_srv6_vty.h \
+	zebra/zebra_srv6_nb.h \
+	zebra/zebra_srv6_nb_config.h \
 	zebra/zebra_mroute.h \
 	zebra/zebra_nb.h \
 	zebra/zebra_netns_id.h \

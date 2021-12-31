@@ -1,5 +1,5 @@
 /*
- * Zebra SRv6 definitions
+ * Zebra SRv6 Northbound Information
  * Copyright (C) 2021  Yamato Sugawara, LINE Corporation
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -26,8 +26,6 @@
 #include "zebra/zebra_srv6_nb_config.h"
 #include "zebra/zebra_srv6_vty.h"
 #include "zebra/zebra_srv6.h"
-
-/* prototypes */
 
 /* clang-format off */
 const struct frr_yang_module_info frr_zebra_srv6_info = {

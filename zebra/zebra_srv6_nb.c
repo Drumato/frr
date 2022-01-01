@@ -32,7 +32,7 @@ const struct frr_yang_module_info frr_zebra_srv6_info = {
 	.name = "frr-zebra-srv6",
 	.nodes = {
 		{
-			.xpath = "/frr-zebra-srv6:srv6",
+			.xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6",
 			.cbs = {
 				.cli_show = cli_show_segment_routing_srv6,
 				.cli_show_end = cli_show_segment_routing_srv6_end,
@@ -40,37 +40,40 @@ const struct frr_yang_module_info frr_zebra_srv6_info = {
 			.priority = NB_DFLT_PRIORITY - 1,
 		},
 		{
-			.xpath = "/frr-zebra-srv6:srv6/locators",
+			.xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators",
 			.cbs = {
 				.cli_show = cli_show_srv6_locators,
 				.cli_show_end = cli_show_srv6_locators_end,
 			},
 		},
 		{
-			.xpath = "/frr-zebra-srv6:srv6/locators/locators",
+			.xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators",
 			.cbs = {
 				.cli_show = cli_show_srv6_locators_locators,
 				.cli_show_end = cli_show_srv6_locators_locators_end,
 			},
 		},
 		{
-			.xpath = "/frr-zebra-srv6:srv6/locators/locators/locator",
+			.xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator",
 			.cbs = {
 				.cli_show = cli_show_srv6_locator,
 				.cli_show_end = cli_show_srv6_locator_end,
 				.create = nb_lib_srv6_locator_create,
 				.destroy = nb_lib_srv6_locator_destroy,
+                .get_next = nb_lib_srv6_locator_get_next,
+                .get_keys = nb_lib_srv6_locator_get_keys,
+                .lookup_entry = nb_lib_srv6_locator_lookup_entry,
 			},
 		},
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/prefix",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/prefix",
             .cbs = {
                 .cli_show = cli_show_srv6_locator_prefix_container,
                 .cli_show_end = cli_show_srv6_locator_prefix_container_end,
             },
         },
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/prefix/prefix",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/prefix/prefix",
             .cbs = {
                 .cli_show = cli_show_srv6_locator_prefix,
                 .cli_show_end = cli_show_srv6_locator_prefix_end,
@@ -79,35 +82,35 @@ const struct frr_yang_module_info frr_zebra_srv6_info = {
             },
         },
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/status-up",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/status-up",
             .cbs = {
                 .modify = nb_lib_srv6_locator_status_up_modify,
                 .destroy = nb_lib_srv6_locator_status_up_destroy,
             },
         },
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/block-bits-length",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/block-bits-length",
             .cbs = {
                 .modify = nb_lib_srv6_locator_block_bits_length_modify,
                 .destroy = nb_lib_srv6_locator_block_bits_length_destroy,
             },
         },
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/node-bits-length",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/node-bits-length",
             .cbs = {
                 .modify = nb_lib_srv6_locator_node_bits_length_modify,
                 .destroy = nb_lib_srv6_locator_node_bits_length_destroy,
             },
         },
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/function-bits-length",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/function-bits-length",
             .cbs = {
                 .modify = nb_lib_srv6_locator_function_bits_length_modify,
                 .destroy = nb_lib_srv6_locator_function_bits_length_destroy,
             },
         },
 		{
-            .xpath = "/frr-zebra-srv6:srv6/locators/locators/locator/argument-bits-length",
+            .xpath = "/frr-zebra-sr:sr/frr-zebra-srv6:srv6/locators/locators/locator/argument-bits-length",
             .cbs = {
                 .modify = nb_lib_srv6_locator_argument_bits_length_modify,
                 .destroy = nb_lib_srv6_locator_argument_bits_length_destroy,

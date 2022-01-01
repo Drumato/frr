@@ -35,6 +35,7 @@
 #include "libfrr.h"
 #include "routemap.h"
 #include "routing_nb.h"
+#include "srv6_nb.h"
 
 #include "zebra/zebra_router.h"
 #include "zebra/zebra_errors.h"
@@ -56,6 +57,7 @@
 #include "zebra/zebra_routemap.h"
 #include "zebra/zebra_nb.h"
 #include "zebra/zebra_opaque.h"
+#include "zebra/zebra_sr_nb.h"
 #include "zebra/zebra_srte.h"
 #include "zebra/zebra_srv6.h"
 #include "zebra/zebra_srv6_nb.h"
@@ -263,7 +265,9 @@ static const struct frr_yang_module_info *const zebra_yang_modules[] = {
 	&frr_zebra_info,
 	&frr_vrf_info,
 	&frr_routing_info,
+	&frr_srv6_info,
 	&frr_zebra_route_map_info,
+	&frr_zebra_sr_info,
 	&frr_zebra_srv6_info,
 };
 

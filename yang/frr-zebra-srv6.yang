@@ -6,6 +6,14 @@ module frr-zebra-srv6 {
   import ietf-inet-types {
     prefix inet;
   }
+  
+  import frr-zebra-sr {
+    prefix a1;
+  }
+
+  import frr-srv6 {
+    prefix frr-srv6;
+  }
 
   organization
     "FRRouting";
@@ -14,6 +22,7 @@ module frr-zebra-srv6 {
      FRR Development List: <mailto:dev@lists.frrouting.org>";
   description
     "This module defines zebra SRv6 settings
+     This module refers Cisco-IOS-XR751-segment-routing-srv6-cfg
 
      Copyright 2021 FRRouting
 
@@ -45,77 +54,81 @@ module frr-zebra-srv6 {
       "Initial revision";
   }
 
-  typedef locator-name {
-    type string {
-      length "1..58";
-    }
+  augment "/a1:sr" {
     description
-      "SRv6 locator name format";
-  }
+      "This augment extends the configuration data of
+       'frr-zebra-sr'";
 
-  typedef locator-len {
-    type uint32 {
-      range "32..112";
-    }
-    description
-      "SRv6 locator len";
-  }
-
-  container srv6 {
-    description
-      "Segment Routing with IPv6 dataplane";
-
-    container locators {
+    container srv6 {
       description
-        "Configure SRv6 locators parameters";
+        "Segment Routing with IPv6 dataplane";
 
       container locators {
         description
-          "Configure SRv6 table of locators";
-        
-        list locator {
-          key "name";
+          "Configure SRv6 locators parameters";
+
+        container locators {
           description
-            "Configure a SRv6 locator";
-
-          container prefix {
-            description
-              "Specify locator prefix value";
-
-            leaf prefix {
-              type inet:ip-prefix;
-              description
-                "IPv6 Prefix";
-            }
-          }
+            "Configure SRv6 table of locators";
           
-          leaf name {
-            type locator-name;
+          list locator {
+            key "name";
             description
-              "Locator name";
-          }
+              "Configure a SRv6 locator";
 
-          leaf status-up {
-            type boolean;
-          }
+            container prefix {
+              description
+                "Specify locator prefix value";
 
-          leaf block-bits-length {
-            type uint8;
-          }
+              leaf prefix {
+                type inet:ip-prefix;
+                description
+                  "IPv6 Prefix";
+              }
+            }
+            /* End of container prefix */
+            
+            leaf name {
+              type frr-srv6:srv6-locator-name;
+              description
+                "Locator name";
+            }
 
-          leaf node-bits-length {
-            type uint8;
-          }
+            leaf status-up {
+              type boolean;
+              description
+                "FRR Original: SRv6 locator used flag";
+            }
 
-          leaf function-bits-length {
-            type uint8;
-          }
+            leaf block-bits-length {
+              type uint8;
+            }
 
-          leaf argument-bits-length {
-            type uint8;
+            leaf node-bits-length {
+              type uint8;
+            }
+
+            leaf function-bits-length {
+              type uint8;
+            }
+
+            leaf argument-bits-length {
+              type uint8;
+            }
+            
           }
+          /* End of list locator */
+
         }
+        /* End of container locators */
+
       }
+      /* End of container locators */
+
     }
+    /* End of container srv6 */
+
   }
+  /* End of augment zebra */
+
 }

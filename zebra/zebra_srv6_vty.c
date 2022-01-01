@@ -220,7 +220,9 @@ DEFUN_YANG (no_srv6,
     /* For consistency between global srv6 manager and yang dnode */
 	for (ALL_LIST_ELEMENTS(srv6->locators, node, nnode, locator)) {
 	    snprintf(xpath, sizeof(xpath),
-		    "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", locator->name);
+		    "/frr-zebra-sr:sr"
+            "/frr-zebra-srv6:srv6"
+            "/locators/locators/locator[name='%s']", locator->name);
 	    nb_cli_enqueue_change(vty, xpath, NB_OP_DESTROY, NULL);
     }
 
@@ -250,7 +252,9 @@ DEFPY_YANG_NOSH(srv6_locator,
 	int rv;
 
 	snprintf(xpath, sizeof(xpath),
-		 "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", name);
+		 "/frr-zebra-sr:sr"
+         "/frr-zebra-srv6:srv6"
+         "/locators/locators/locator[name='%s']", name);
 	nb_cli_enqueue_change(vty, xpath, NB_OP_CREATE, NULL);
 
 	rv = nb_cli_apply_changes(vty, xpath);
@@ -270,7 +274,9 @@ DEFPY_YANG(
 	char xpath[XPATH_MAXLEN];
 
 	snprintf(xpath, sizeof(xpath),
-		 "/frr-zebra-srv6:srv6/locators/locators/locator[name='%s']", name);
+		 "/frr-zebra-sr:sr"
+         "/frr-zebra-srv6:srv6"
+         "/locators/locators/locator[name='%s']", name);
 	nb_cli_enqueue_change(vty, xpath, NB_OP_DESTROY, NULL);
 
 	return nb_cli_apply_changes(vty, xpath);
@@ -356,92 +362,110 @@ DEFPY_YANG (locator_prefix,
     return rv;
 }
 
+/* Cisco's CLI just transitions from config-node to srv6-node directly.
+ * But for now FRR doesn't support it so this function generates 2 blocks.
+ */
 void cli_show_segment_routing_srv6(struct vty *vty, 
         const struct lyd_node *dnode, bool show_defaults) {
-	vty_out(vty, "segment-routing srv6\n");
+	vty_out(vty, "segment-routing\n");
+    vty_out(vty, " srv6\n");
 }
 
+/* Cisco's CLI just transitions from config-node to srv6-node directly.
+ * But for now FRR doesn't support it so this function closes 2 blocks.
+ */
 void cli_show_segment_routing_srv6_end(struct vty *vty, 
         const struct lyd_node *dnode) {
+	vty_out(vty, " exit\n");
 	vty_out(vty, "exit\n");
 }
 
+// this line's indent-space will be removed for consistency with cisco's cli.
 void cli_show_srv6_locators(struct vty *vty, const struct lyd_node *dnode,
 			bool show_defaults) {
-	vty_out(vty, " locators\n");
+	vty_out(vty, "  locators\n");
 }
 
+// this line's indent-space will be removed for consistency with cisco's cli.
 void cli_show_srv6_locators_end(struct vty *vty, 
         const struct lyd_node *dnode) {
-	vty_out(vty, " exit\n");
+	vty_out(vty, "  exit\n");
 }
 
-// this function doesn't anything for consisutency with cisco's cli
+// this function doesn't anything for consistency with frr's cli
 void cli_show_srv6_locators_locators(struct vty *vty, 
         const struct lyd_node *dnode, bool show_defaults) {
 }
 
-// this function doesn't anything for consisutency with cisco's cli
+// this function doesn't anything for consistency with frr's cli
 void cli_show_srv6_locators_locators_end(struct vty *vty, 
         const struct lyd_node *dnode) {
 }
 
+// this line's indent-space will be removed for consistency with cisco's cli.
 void cli_show_srv6_locator(struct vty *vty, const struct lyd_node *dnode,
 			bool show_defaults)
 {
 	const char *loc_name = NULL;
 
 	loc_name = yang_dnode_get_string(dnode, "./name");
-	vty_out(vty, "  locator %s\n", loc_name);
+	vty_out(vty, "   locator %s\n", loc_name);
 }
 
+// this line's indent-space will be removed for consistency with cisco's cli.
 void cli_show_srv6_locator_end(struct vty *vty, const struct lyd_node *dnode)
-{ vty_out(vty, "  exit\n");
+{ 
+    vty_out(vty, "   exit\n");
 }
 
-// this function doesn't anything for consisutency to cisco's cli
+// this function doesn't anything for consisutency to frr's cli
 void cli_show_srv6_locator_prefix_container(struct vty *vty, 
         const struct lyd_node *dnode, bool show_defaults) {
 }
 
-// this function doesn't anything for consisutency to cisco's cli
+// this function doesn't anything for consisutency to frr's cli
 void cli_show_srv6_locator_prefix_container_end(struct vty *vty, 
         const struct lyd_node *dnode) {
 }
 
+// this line's indent-space will be removed for consistency with cisco's cli.
 void cli_show_srv6_locator_prefix(struct vty *vty, 
         const struct lyd_node *dnode, bool show_defaults) {
     struct prefix_ipv6 prefix;
 	char prefix_str[256];
     uint8_t function_bits_length;
 
-    yang_dnode_get_prefix(&prefix, dnode, ".");
-	prefix2str(&prefix, prefix_str, sizeof(prefix_str));
+    yang_dnode_get_prefix((struct prefix*)&prefix, dnode, ".");
+	prefix2str((struct prefix*)&prefix, prefix_str, sizeof(prefix_str));
     function_bits_length = yang_dnode_get_uint8(
             dnode, "../../function-bits-length");
-	vty_out(vty, "   prefix %s func-bits %d\n", 
+
+	vty_out(vty, "    prefix %s func-bits %d\n", 
             prefix_str, function_bits_length);
 }
 
+// this line's indent-space will be removed for consistency with cisco's cli.
 void cli_show_srv6_locator_prefix_end(struct vty *vty, 
         const struct lyd_node *dnode) {
-	vty_out(vty, "   exit\n");
+	vty_out(vty, "    exit\n");
 }
 
 static int zebra_sr_config(struct vty *vty)
 {
-	int write = 0;
+	int write_count = 0;
 	struct lyd_node *dnode;
 
 	if (zebra_srv6_is_enable()) {
-		dnode = yang_dnode_get(running_config->dnode, "/frr-zebra-srv6:srv6");
+		dnode = yang_dnode_get(running_config->dnode, 
+                "/frr-zebra-sr:sr"
+                "/frr-zebra-srv6:srv6");
 		if (dnode) {
 			nb_cli_show_dnode_cmds(vty, dnode, false);
-			write++;
+			write_count++;
 		}
 	}
 
-	return write;
+	return write_count;
 }
 
 void zebra_srv6_vty_init(void)

@@ -1,0 +1,148 @@
+module frr-srv6 {
+  yang-version 1.1;
+  namespace "http://frrouting.org/yang/srv6";
+  prefix frr-srv6;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  organization
+    "FRRouting";
+  contact
+    "FRR Users List:       <mailto:frog@lists.frrouting.org>
+     FRR Development List: <mailto:dev@lists.frrouting.org>";
+  description
+    "This module defines SRv6 Datatypes
+     This module refers Cisco-IOS-XR751-segment-routing-srv6-datatypes
+
+     Copyright 2021 FRRouting
+
+     Redistribution and use in source and binary forms, with or without
+     modification, are permitted provided that the following conditions
+     are met:
+
+     1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+     \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+     LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+     A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+     HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+     LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+     DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+     THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.";
+
+  revision 2021-12-31 {
+    description
+      "Initial revision";
+  }
+
+  typedef srv6-locator-name {
+    type string {
+      length "1..58";
+    }
+    description
+      "SRv6 locator name";
+  }
+
+  typedef srv6-sid-holdtime {
+    type uint32 {
+      range "0..60";
+    }
+    description
+      "SRv6 SID holdtime";
+  }
+
+  typedef srv6-locator-len {
+    type uint32 {
+      range "32..112";
+    }
+    description
+      "SRv6 locator len";
+  }
+
+  typedef srv6-encapsulation-hop-limit-value {
+    type uint32 {
+      range "0..255";
+    }
+    description
+      "SRv6 encapsulation hop limit value";
+  }
+
+  typedef srv6-encapsulation-tc-value {
+    type uint32 {
+      range "0..255";
+    }
+    description
+      "SRv6 encapsulation tc value";
+  }
+
+  typedef srv6-encapsulation-tc-option {
+    type enumeration {
+      enum "value" {
+        value 1;
+        description
+          "Set Value";
+      }
+      enum "propagate" {
+        value 2;
+        description
+          "Set value by propagation";
+      }
+    }
+    description
+      "SRv6 encapsulation tc option";
+  }
+
+  typedef srv6-encapsulation-hop-limit-option {
+    type enumeration {
+      enum "count" {
+        value 1;
+        description
+          "Set Value";
+      }
+      enum "propagate" {
+        value 2;
+        description
+          "Propagate IP TLL";
+      }
+    }
+    description
+      "SRv6 encapsulation hop limit option";
+  }
+
+  typedef srv6u-behavior {
+    type enumeration {
+      enum "unode-shift-only" {
+        value 42;
+        description
+          "uNode (shift keyword: unode-only)";
+      }
+      enum "unode-psp-usd" {
+        value 48;
+        description
+          "uNode (PSP/USD variant)";
+      }
+    }
+    description
+      "SRv6u behavior";
+  }
+
+  typedef srv6-algo-value {
+    type uint32 {
+      range "128..255";
+    }
+    description
+      "SRv6 algo value";
+  }
+}
+

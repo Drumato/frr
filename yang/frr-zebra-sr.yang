@@ -1,0 +1,359 @@
+module frr-zebra-sr {
+  yang-version 1.1;
+  namespace "http://frrouting.org/yang/zebra-sr";
+  prefix frr-zebra-sr;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  organization
+    "FRRouting";
+  contact
+    "FRR Users List:       <mailto:frog@lists.frrouting.org>
+     FRR Development List: <mailto:dev@lists.frrouting.org>";
+  description
+    "This module defines zebra Segment Routing settings
+     This module refers Cisco-IOS-XR751-segment-routing-ms-cfg
+
+     Copyright 2021 FRRouting
+
+     Redistribution and use in source and binary forms, with or without
+     modification, are permitted provided that the following conditions
+     are met:
+
+     1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+     \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+     LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+     A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+     HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+     LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+     DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+     THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.";
+
+  revision 2021-12-21 {
+    description
+      "Initial revision";
+  }
+
+  typedef sr-mi-flag {
+    type enumeration {
+      enum "disable" {
+        value 0;
+        description
+          "Disable flag";
+      }
+
+      enum "enable" {
+        value 1;
+        description
+          "Enable flag";
+      }
+
+    }
+
+    description
+      "sr mi flag";
+  }
+
+  typedef sr-address-family {
+    type enumeration {
+      enum "ipv4" {
+        value 1;
+        description
+          "IP version 4";
+      }
+
+      enum "ipv6" {
+        value 2;
+        description
+          "IP version 6";
+      }
+
+    }
+
+    description
+      "sr address family";
+  }
+
+  typedef srlb-string {
+    type string {
+      pattern "(srlb_default)";
+    }
+
+    description
+      "srlb_default:Default SRLB block";
+  }
+
+  typedef sid-type-list {
+    type enumeration {
+      enum "absolute" {
+        value 1;
+        description
+          "Absolute SID";
+      }
+
+      enum "index" {
+        value 2;
+        description
+          "Index SID";
+      }
+
+    }
+
+    description
+      "SID type list";
+  }
+
+  container sr {
+    description
+      "Segment Routing";
+
+    container local-block {
+      presence "Indicates a local-block node is configured.";
+      description
+        "Segment Routing Local Block of Labels";
+
+      leaf lower-bound {
+        type uint32 {
+          range "15000..1048574";
+        }
+        mandatory true;
+        description
+          "SRLB Lower Bound";
+      }
+
+      leaf upper-bound {
+        type uint32 {
+          range "15001..1048575";
+        }
+        mandatory true;
+        description
+          "SRLB Upper Bound";
+      }
+
+    }
+
+    container mappings {
+      description
+        "Mapping Server";
+      list mapping {
+        key "af ip mask";
+        description
+          "IP prefix to SID mapping";
+
+        leaf af {
+          type sr-address-family;
+          description
+            "Address Family";
+        }
+
+        leaf ip {
+          type inet:ip-address-no-zone;
+          description
+            "IP prefix";
+        }
+
+        leaf mask {
+          type uint32 {
+            range "1..128";
+          }
+          description
+            "Mask";
+        }
+
+        leaf sid-start {
+          type uint32 {
+            range "0..1048575";
+          }
+          description
+            "Start of SID index range";
+        }
+
+        leaf sid-range {
+          type uint32 {
+            range "0..65535";
+          }
+          description
+            "Range (number of SIDs)";
+        }
+
+        leaf flag-attached {
+          type sr-mi-flag;
+          description
+            "Enable/Disable Attached flag";
+        }
+      }
+      /* End of list mapping */
+
+    }
+    /* End of container mappings */
+
+    container adjacency-sid {
+      description
+        "Segment Routing Adjacency SID";
+
+      container interfaces {
+        description
+          "Segment Routing Adjacency SID Interface Table";
+
+        list interface {
+          key "interface";
+          description
+            "Segment Routing Adjacency SID Interface";
+
+          container address-families {
+            description
+              "Segment Routing Adjacency SID Interface
+               Address Family Table";
+
+            list address-family {
+              key "address-family";
+              description
+                "Segment Routing Adjacency SID Interface
+                 Address Family";
+
+              container next-hops {
+                description
+                  "Segment Routing Adjacency SID Interface
+                   Address Family NextHop Table";
+
+                list next-hop {
+                  must "(count(../next-hop)=1) or ((count(../next-hop[ip-addr='0.0.0.0'])=0) and (count(../next-hop[ip-addr='::0'])=0))";
+                  key "ip-addr";
+                  unique "l2-adjacency-sid/sid-type l2-adjacency-sid/index-sid l2-adjacency-sid/absolute-sid l2-adjacency-sid/srlb";
+                  description
+                    "Segment Routing Adjacency SID Interface
+                     Address Family NextHop, use a single
+                     ANYADDR (0.0.0.0 or ::) NextHop for point
+                     to point links";
+                  container l2-adjacency-sid {
+                    description
+                      "L2 Adjacency SID type and value";
+
+                    leaf sid-type {
+                      type sid-type-list;
+                      description
+                        "SID type";
+                    }
+
+                    leaf absolute-sid {
+                      when "../sid-type = 'absolute'" {
+                        description
+                          "../SIDType = absolute";
+                      }
+                      type uint32 {
+                        range "15000..1048575";
+                      }
+                      description
+                        "SID value";
+                    }
+
+                    leaf index-sid {
+                      when "../sid-type = 'index'" {
+                        description
+                          "../SIDType = index";
+                      }
+                      type uint32 {
+                        range "0..1048575";
+                      }
+                      description
+                        "SID value";
+                    }
+
+                    leaf srlb {
+                      when "../sid-type = 'absolute' or ../sid-type = 'index'" {
+                        description
+                          "../SIDType = absolute or ../SIDType =
+                           index";
+                      }
+                      type srlb-string;
+                      mandatory true;
+                      description
+                        "SRLB block name";
+                    }
+                  }
+                  /* End of container l2-adjacency-sid */
+
+                  leaf ip-addr {
+                    type inet:ip-address-no-zone;
+                    description
+                      "NextHop IP address";
+                  }
+
+                }
+                /* End of list nexthop */
+
+              }
+              /* End of container nexthops */
+
+              leaf address-family {
+                type sr-address-family;
+                description
+                  "Address Family";
+              }
+            }
+            /* End of list address-family */
+
+          }
+          /* End of container address-families */
+
+          leaf interface {
+            type string;
+            description
+              "Interface name";
+          }
+
+        }
+      }
+      /* End of container interfaces */
+
+    }
+    /* End of container adjacency-sid */
+
+    container global-block {
+      presence "Indicates a global-block node is configured.";
+      description
+        "Global Block Segment Routing";
+
+      leaf lower-bound {
+        type uint32 {
+          range "16000..1048574";
+        }
+
+        mandatory true;
+        description
+          "SRGB Lower Bound";
+      }
+
+      leaf upper-bound {
+        type uint32 {
+          range "16001..1048575";
+        }
+
+        mandatory true;
+        description
+          "SRGB Upper Bound";
+      }
+    }
+    /* End of container global-block */
+
+    leaf enable {
+      type empty;
+      description
+        "enable SR";
+    }
+  }
+  /* End of container sr */
+
+}

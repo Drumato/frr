@@ -94,8 +94,12 @@ zebra_zebra_SOURCES = \
 	zebra/zebra_mpls_openbsd.c \
 	zebra/zebra_mpls_null.c \
 	zebra/zebra_mpls_vty.c \
+	zebra/zebra_sr_nb.c \
+	zebra/zebra_sr_nb_config.c \
 	zebra/zebra_srv6.c \
 	zebra/zebra_srv6_vty.c \
+	zebra/zebra_srv6_nb.c \
+	zebra/zebra_srv6_nb_config.c \
 	zebra/zebra_mroute.c \
 	zebra/zebra_nb.c \
 	zebra/zebra_nb_config.c \
@@ -168,8 +172,12 @@ noinst_HEADERS += \
 	zebra/zebra_mlag.h \
 	zebra/zebra_mlag_vty.h \
 	zebra/zebra_mpls.h \
+	zebra/zebra_sr_nb.h \
+	zebra/zebra_sr_nb_config.h \
 	zebra/zebra_srv6.h \
 	zebra/zebra_srv6_vty.h \
+	zebra/zebra_srv6_nb.h \
+	zebra/zebra_srv6_nb_config.h \
 	zebra/zebra_mroute.h \
 	zebra/zebra_nb.h \
 	zebra/zebra_netns_id.h \
@@ -230,6 +238,8 @@ endif
 nodist_zebra_zebra_SOURCES = \
 	yang/frr-zebra.yang.c \
 	yang/frr-zebra-route-map.yang.c \
+	yang/frr-zebra-sr.yang.c \
+	yang/frr-zebra-srv6.yang.c \
 	# end
 
 zebra_zebra_cumulus_mlag_la_SOURCES = zebra/zebra_mlag_private.c

@@ -85,11 +85,13 @@ static const char *const frr_native_modules[] = {
 	"frr-routing",
 	"frr-route-map",
 	"frr-nexthop",
+	"frr-srv6",
 	"frr-ripd",
 	"frr-ripngd",
 	"frr-isisd",
 	"frr-vrrpd",
 	"frr-zebra",
+	"frr-zebra-sr",
 	"frr-pathd",
 };
 /* clang-format on */

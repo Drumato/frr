@@ -3633,6 +3633,10 @@ int bgp_delete(struct bgp *bgp)
 
 	/* Inform peers we're going down. */
 	for (ALL_LIST_ELEMENTS(bgp->peer, node, next, peer)) {
+	    if (CHECK_FLAG(peer->flags, PEER_FLAG_GRACEFUL_RESTART)
+	        || CHECK_FLAG(peer->flags, PEER_FLAG_GRACEFUL_RESTART_HELPER))
+            continue;
+
 		if (BGP_IS_VALID_STATE_FOR_NOTIF(peer->status))
 			bgp_notify_send(peer, BGP_NOTIFY_CEASE,
 					BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN);
@@ -8024,9 +8028,14 @@ void bgp_terminate(void)
 	for (ALL_LIST_ELEMENTS(bm->bgp, mnode, mnnode, bgp))
 		for (ALL_LIST_ELEMENTS(bgp->peer, node, nnode, peer))
 			if (peer_established(peer) || peer->status == OpenSent
-			    || peer->status == OpenConfirm)
+			    || peer->status == OpenConfirm) {
+	            if (CHECK_FLAG(peer->flags, PEER_FLAG_GRACEFUL_RESTART)
+	                || CHECK_FLAG(peer->flags, PEER_FLAG_GRACEFUL_RESTART_HELPER))
+                    continue;
+
 				bgp_notify_send(peer, BGP_NOTIFY_CEASE,
 						BGP_NOTIFY_CEASE_PEER_UNCONFIG);
+            }
 
 	BGP_TIMER_OFF(bm->t_rmap_update);
 
